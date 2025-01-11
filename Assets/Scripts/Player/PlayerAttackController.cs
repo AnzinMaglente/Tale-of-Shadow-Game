@@ -1,46 +1,51 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerAttackController : MonoBehaviour
 {
-    private Rigidbody2D _rb;
+    [Header("Controllers")]
 
-    private bool _canAttack = true;
+    public PlayerAnimatorController playerAnimatorController;
+
+    [Header("Attack settings")]
+
     [SerializeField]
-    private float _attackTime;
+    public float attackTime;
     [SerializeField]
     private float _attackSpeed;
     [SerializeField]
     private float _attackCooldown;
-
     [SerializeField]
-    private Transform _meleeAttactOrigin;
-    [SerializeField]
-    private GameObject _SlashPrefab;
+    private float _attackDamage;
 
-    void Awake()
-    {
-        _rb = GetComponent<Rigidbody2D>();
-    }
+    public bool OnEnemyHit = false;
 
-    void HorizontalSlash()
+    public void HorizontalSlash(InputAction.CallbackContext context)
     {
-        GameObject HorSlash = Instantiate(_SlashPrefab, _meleeAttactOrigin.position, _meleeAttactOrigin.rotation);
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Z))
+        if (attackTime <= 0f)
         {
-            HorizontalSlash();
+            if (context.performed)
+            {
+                playerAnimatorController.anim.SetTrigger("onAttack");
+                attackTime = _attackSpeed;
+                SoundManager.instance.PlaySlashSound();
+            }
+        }
+        else
+        {
+            attackTime -= Time.deltaTime;
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.tag == "Enemy")
+        {
+            Debug.Log("Enemy hit");
+            SoundManager.instance.PlaySlimeDeathSound();
+            Destroy(other.gameObject);
         }
     }
 }
